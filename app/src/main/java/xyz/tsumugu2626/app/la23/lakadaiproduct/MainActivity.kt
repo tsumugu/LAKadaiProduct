@@ -26,34 +26,40 @@ class MainActivity : AppCompatActivity() {
 
         binding = ActivityMainBinding.inflate(layoutInflater).apply { setContentView(this.root) }
 
-        memoItemList = Json.decodeFromString(pref.getString("memoItemList", "[]") ?: "[]")
-
-        binding.memoListView.adapter = ArrayAdapter(
-            this,
-            R.layout.simple_list_item_1,
-            memoItemList
-        )
-
         binding.addItemButton.setOnClickListener {
             val addItemIntent: Intent = Intent(this, AddItemActivity::class.java)
             startActivity(addItemIntent)
+        }
+        binding.memoListView.setOnItemClickListener { _, _, i, _ ->
+            val editItemIntent: Intent = Intent(this, EditItemActivity::class.java)
+            editItemIntent.putExtra("index", i)
+            startActivity(editItemIntent)
         }
     }
 
     override fun onStart() {
         super.onStart()
 
-        val textFromAddItemActivity: String = intent.getStringExtra("text") ?: ""
-        if (textFromAddItemActivity != "") {
-            memoItemList.add(textFromAddItemActivity)
-        }
+        loadMemoItemList()
+        binding.memoListView.adapter = ArrayAdapter(
+            this,
+            R.layout.simple_list_item_1,
+            memoItemList
+        )
     }
 
     override fun onStop() {
         super.onStop()
 
+        saveMemoItemList()
+    }
+
+    private fun loadMemoItemList() {
+        memoItemList = Json.decodeFromString(pref.getString("memoItemList", "[]") ?: "[]")
+    }
+
+    private fun saveMemoItemList() {
         val jsonStringfiedMemoItemList = Json.encodeToString(memoItemList)
-        Log.d("JSON",jsonStringfiedMemoItemList)
 
         val editor = pref.edit()
         editor.putString("memoItemList", jsonStringfiedMemoItemList)
